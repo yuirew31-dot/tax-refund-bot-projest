@@ -1,0 +1,24 @@
+name = "taxrefund-bot"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+
+# Static landing served by the same Worker (free tier).
+[assets]
+directory = "./public"
+
+# D1 database for demand events, visitor counts, bot state, and AI quota reservations.
+# After `wrangler d1 create taxrefund-db`, copy the printed database_id here.
+[[d1_databases]]
+binding = "DB"
+database_name = "taxrefund-db"
+database_id = "1a87aab4-26dc-48ff-93e3-f912be24c749"
+
+[vars]
+GROQ_MAX_INPUT_CHARS = "2000"
+GROQ_MAX_OUTPUT_TOKENS = "600"
+GROQ_MAX_OUTPUT_CHARS = "2600"
+GROQ_TIMEOUT_MS = "15000"
+GROQ_CHAT_DAILY_LIMIT = "10"
+GROQ_CHAT_10MIN_LIMIT = "5"
+GROQ_GLOBAL_DAILY_LIMIT = "50"
+GROQ_GLOBAL_10MIN_LIMIT = "10"

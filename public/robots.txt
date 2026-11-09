@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://taxrefund-bot.taxrefund.workers.dev/sitemap.xml

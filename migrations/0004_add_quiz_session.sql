@@ -1,0 +1,1 @@
+ALTER TABLE bot_state ADD COLUMN session_id TEXT NOT NULL DEFAULT '';

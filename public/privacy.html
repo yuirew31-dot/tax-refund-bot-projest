@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — TaxRefund Bot</title>
+  <meta name="robots" content="noindex">
+  <style>
+    :root { --bg:#f2f7f4; --card:#fff; --edge:#dce8e0; --ink:#12261c; --muted:#5c7266; --green:#16a34a; }
+    * { box-sizing:border-box; margin:0; }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); line-height:1.7; padding:40px 24px; }
+    .wrap { max-width:760px; margin:0 auto; background:var(--card); border:1px solid var(--edge); border-radius:16px; padding:36px 32px; }
+    h1 { font-family:'DM Serif Display',serif; font-size:2rem; margin-bottom:6px; }
+    h2 { font-size:1.15rem; margin:26px 0 8px; color:#0b5c33; }
+    p, li { color:#31463a; font-size:.95rem; }
+    ul { padding-left:20px; }
+    a { color:var(--green); }
+    .updated { color:var(--muted); font-size:.82rem; margin-bottom:20px; }
+    .foot { margin-top:30px; padding-top:16px; border-top:1px solid var(--edge); font-size:.82rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: 2026-11-07 · TaxRefund Bot</p>
+
+    <h2>1. Information the app stores</h2>
+    <ul>
+      <li><b>Website visits:</b> a random visitor ID in the first-party <code>trb_visitor</code> cookie,
+        plus the referrer and browser user-agent. The cookie is HttpOnly, SameSite=Lax, Secure on HTTPS,
+        and currently expires after one year.</li>
+      <li><b>Demand events:</b> visit, quiz-start, quiz-complete, checklist-interest, and Telegram-open
+        event types, with referrer and user-agent. An event is associated with a visitor only when the
+        cookie matches a visitor record already stored by the app. A client-supplied ID is not accepted
+        as proof of identity.</li>
+      <li><b>AI beta limits:</b> the app stores request timestamps and either a Telegram chat ID or
+        website visitor ID in Cloudflare D1 to enforce usage limits. It does not store AI prompts or
+        generated answers in D1.</li>
+      <li><b>Telegram bot:</b> Telegram chat ID, quiz state, and selected quiz categories are stored in
+        Cloudflare D1 to operate the quiz.</li>
+      <li><b>Email:</b> new email collection is disabled. Earlier versions may have stored email
+        addresses in D1. No production database was inspected or changed for this update; an operator
+        must review any historical records using authorized production access.</li>
+    </ul>
+
+    <h2>2. Information not requested</h2>
+    <p>The quiz uses broad category choices and does not need exact income or tax-document data. Do not
+    send Social Security numbers, bank details, complete tax returns, W-2/1099 documents, or identity
+    documents in a website field or Telegram message.</p>
+
+    <h2>3. Processing by service providers</h2>
+    <p>Cloudflare hosts the Worker and D1 database. Telegram processes bot messages and may retain chat
+    messages and records under its own systems and policies. When AI answers are enabled, a website or
+    Telegram user's question and the app's instructions are sent to Groq for processing. The app does
+    not control or promise deletion of records held by Telegram, Groq, Cloudflare, or other providers.</p>
+
+    <h2>4. Deletion and retention</h2>
+    <p>Send <code>/delete</code> to the bot in a private chat to delete the app's saved quiz state and
+    that chat's AI-usage counters from D1. Website AI-usage timestamps are removed when a later quota
+    reservation prunes expired rows. The command does not delete Telegram chat history, Telegram
+    records, provider-side records, website visitor records, or interest events. Website analytics
+    records have no automatic retention job in the current app; no fixed deletion schedule is promised
+    for AI-usage rows beyond quota-window pruning.</p>
+
+    <h2>5. Cookies and attribution</h2>
+    <p>The random visitor cookie is used to count visits, associate later demand events with an
+    existing visitor record, and scope website AI usage limits. It is not a login, does not identify a
+    person, and is not used for cross-site tracking by this app.</p>
+
+    <h2>6. Purchases and checklist</h2>
+    <p>The Evidence Checklist is not available. The displayed $5 amount is hypothetical test pricing.
+    The interest button records demand only; no order or payment is taken and no document is generated
+    or delivered.</p>
+
+    <h2>7. Changes</h2>
+    <p>This policy describes the current app behavior and may be updated when that behavior changes.
+    It does not claim that provider-side practices or legal requirements have been independently
+    verified.</p>
+
+    <div class="foot">TaxRefund Bot · Educational U.S. tax information · Not affiliated with the IRS.
+      See <a href="/terms.html">Terms of Service</a>.</div>
+  </main>
+</body>
+</html>

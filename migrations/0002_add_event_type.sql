@@ -1,0 +1,1 @@
+ALTER TABLE interest_events ADD COLUMN event_type TEXT NOT NULL DEFAULT 'free_complete';

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxRefund Bot — Find tax topics worth reviewing</title>
+  <meta name="description" content="Answer eight questions to see U.S. tax topics that may be worth reviewing. Educational only, free, and no account required.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f7f4;
+      --card: #ffffff;
+      --edge: #dce8e0;
+      --ink: #12261c;
+      --muted: #5c7266;
+      --green: #16a34a;
+      --green-bright: #22c55e;
+      --green-soft: #e6f7ed;
+      --sun: #f59e0b;
+      --sky: #0ea5e9;
+      --berry: #e11d48;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--ink); line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 700px; margin: 0 auto; padding: 48px 24px 56px; }
+
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+    .brand span { font-family: 'IBM Plex Mono', monospace; font-size: .84rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 500; }
+
+    .badge {
+      display: inline-block; margin-bottom: 18px;
+      font: 600 .78rem 'Inter', sans-serif; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--green); background: var(--green-soft);
+      border: 1px solid #bce8cd; border-radius: 999px; padding: 7px 14px;
+    }
+    h1 {
+      font-family: 'DM Serif Display', serif; font-weight: 400;
+      font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.1; letter-spacing: -.01em;
+    }
+    h1 em { color: var(--green); font-style: italic; }
+    .sub { color: var(--muted); font-size: 1.08rem; margin-top: 18px; max-width: 52ch; }
+    .sub b { color: var(--ink); }
+
+    .proof-note { margin-top: 24px; color: var(--muted); font-size: .9rem; }
+
+    /* ============ QUIZ ============ */
+    .quiz {
+      margin-top: 40px; background: var(--card);
+      border: 1px solid var(--edge); border-radius: 18px;
+      padding: 30px 28px;
+      box-shadow: 0 30px 70px -40px rgba(18, 60, 38, .35);
+    }
+    .quiz-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .quiz-head h2 { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 1.45rem; }
+    .quiz-head span { font-family: 'IBM Plex Mono', monospace; font-size: .78rem; color: var(--muted); }
+    .progress { height: 6px; background: var(--edge); border-radius: 3px; margin: 14px 0 22px; overflow: hidden; }
+    .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--green-bright), var(--green)); border-radius: 3px; transition: width .35s ease; }
+    .q-text { font-weight: 700; font-size: 1.18rem; margin-bottom: 18px; }
+    .q-hint { color: var(--muted); font-size: .86rem; font-weight: 400; margin-top: 4px; }
+    .q-answers { display: flex; flex-direction: column; gap: 10px; }
+    .q-answers button {
+      padding: 14px 16px; text-align: left;
+      font: 600 1rem 'Inter', sans-serif;
+      border-radius: 12px; cursor: pointer;
+      border: 2px solid var(--edge); background: var(--bg); color: var(--ink);
+      transition: border-color .15s, background .15s, transform .1s;
+    }
+    .q-answers button small { display: block; font-weight: 400; font-size: .8rem; color: var(--muted); margin-top: 1px; }
+    .q-answers button:hover { border-color: var(--green-bright); transform: translateY(-1px); }
+    .q-answers button:focus-visible { outline: 3px solid var(--green-soft); outline-offset: 2px; }
+    .q-answers button:active { background: var(--green-soft); border-color: var(--green); }
+
+    /* ============ WEBSITE AI Q&A ============ */
+    .ai-card {
+      margin-top: 24px; background: var(--card); border: 1px solid var(--edge);
+      border-radius: 18px; padding: 26px 28px;
+      box-shadow: 0 20px 50px -38px rgba(18, 60, 38, .35);
+    }
+    .ai-card h2 { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 1.45rem; }
+    .ai-card > p { color: var(--muted); font-size: .9rem; margin-top: 6px; }
+    .ai-card label { display: block; font-weight: 700; margin-top: 18px; }
+    .ai-card textarea {
+      display: block; width: 100%; min-height: 120px; margin-top: 7px; padding: 13px 14px;
+      border: 2px solid var(--edge); border-radius: 12px; background: var(--bg); color: var(--ink);
+      font: 400 1rem/1.5 'Inter', sans-serif; resize: vertical;
+    }
+    .ai-card textarea:focus-visible { outline: 3px solid var(--green-soft); border-color: var(--green); }
+    .ai-form-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+    .ai-count { color: var(--muted); font: 500 .78rem 'IBM Plex Mono', monospace; }
+    .ai-submit {
+      padding: 11px 16px; border: 0; border-radius: 10px; background: var(--green);
+      color: #fff; font: 700 .9rem 'Inter', sans-serif; cursor: pointer;
+    }
+    .ai-submit:disabled { cursor: wait; opacity: .65; }
+    .ai-status { min-height: 1.5em; margin-top: 10px; color: var(--muted); font-size: .88rem; }
+    .ai-answer { margin-top: 14px; padding: 16px; background: var(--green-soft); border-radius: 12px; }
+    .ai-answer h3 { font-size: 1rem; }
+    .ai-answer-text { margin-top: 8px; overflow-wrap: anywhere; }
+    .ai-answer-text > :first-child { margin-top: 0; }
+    .ai-answer-text > :last-child { margin-bottom: 0; }
+    .ai-answer-text h2, .ai-answer-text h3 { margin: 14px 0 6px; font-size: .98rem; }
+    .ai-answer-text p, .ai-answer-text ul, .ai-answer-text ol { margin: 8px 0; }
+    .ai-answer-text ul, .ai-answer-text ol { padding-left: 22px; }
+    .ai-answer-text table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+    .ai-answer-text th, .ai-answer-text td { padding: 6px 8px; border: 1px solid var(--green); text-align: left; }
+    .ai-answer-text code { padding: 1px 4px; background: rgba(0, 0, 0, .08); border-radius: 4px; }
+    .ai-disclaimer { margin-top: 12px; color: var(--muted); font-size: .8rem; }
+
+    /* ============ RESULTS ============ */
+    #results { display: none; margin-top: 40px; }
+    .r-summary {
+      background: linear-gradient(135deg, #0b5c33, #128a48);
+      color: #fff; border-radius: 18px; padding: 30px 28px;
+      box-shadow: 0 30px 70px -38px rgba(11, 92, 51, .6);
+    }
+    .r-summary .big {
+      font-family: 'IBM Plex Mono', monospace; font-size: clamp(2rem, 7vw, 2.8rem);
+      text-shadow: 0 0 30px rgba(255,255,255,.25);
+    }
+    .r-summary p { opacity: .92; margin-top: 6px; }
+    .r-list { margin-top: 18px; display: grid; gap: 10px; }
+    .r-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--card); border: 1px solid var(--edge); border-radius: 14px; padding: 18px;
+    }
+    .r-item .dot {
+      flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.05rem;
+    }
+    .r-item h3 { font-size: .98rem; font-weight: 700; }
+    .r-item p { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+    .r-item .law-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: .68rem; letter-spacing: .05em; color: var(--sky); background: #e8f2fb; border-radius: 6px; padding: 3px 8px; }
+
+    /* ============ TELEGRAM CTA ============ */
+    .tg-cta {
+      margin-top: 18px; display: flex; gap: 16px; align-items: center;
+      background: var(--card); border: 1px solid var(--edge); border-radius: 14px; padding: 20px;
+    }
+    .tg-cta .tg-ico {
+      flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
+      background: #2aabee; display: flex; align-items: center; justify-content: center;
+    }
+    .tg-cta h3 { font-size: 1rem; }
+    .tg-cta p { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+    .tg-btn {
+      display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+      padding: 11px 18px; font: 700 .9rem 'Inter', sans-serif;
+      color: #fff; background: #2aabee; border: none; border-radius: 10px;
+      cursor: pointer; text-decoration: none;
+      transition: transform .12s, background .2s;
+    }
+    .tg-btn:hover { transform: translateY(-2px); background: #229ed9; }
+
+    /* ============ FULL U.S. GUIDE ============ */
+    .guide { margin-top: 64px; }
+    .guide h2 {
+      font-family: 'DM Serif Display', serif; font-weight: 400;
+      font-size: clamp(1.6rem, 4vw, 2.1rem); margin-bottom: 6px;
+    }
+    .guide .g-sub { color: var(--muted); margin-bottom: 22px; }
+    .g-sec {
+      background: var(--card); border: 1px solid var(--edge); border-radius: 14px;
+      margin-bottom: 12px; overflow: hidden;
+    }
+    .g-sec summary {
+      cursor: pointer; padding: 16px 20px; font-weight: 700; font-size: .98rem;
+      list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .g-sec summary::-webkit-details-marker { display: none; }
+    .g-sec summary::after { content: '+'; font-family: 'IBM Plex Mono', monospace; color: var(--green); font-size: 1.2rem; }
+    .g-sec[open] summary::after { content: '–'; }
+    .g-body { padding: 0 20px 18px; font-size: .9rem; color: #31463a; }
+    .g-body p { margin-bottom: 10px; }
+    .g-body .ref {
+      font-family: 'IBM Plex Mono', monospace; font-size: .72rem;
+      color: var(--sky); background: #e8f2fb; border-radius: 6px; padding: 2px 7px; margin-left: 4px;
+      white-space: nowrap;
+    }
+    .g-body a { color: var(--green); font-weight: 600; }
+
+    /* ============ TESTIMONIALS ============ */
+    .t-label { margin: 64px 0 18px; font: 600 .8rem 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: center; }
+    .t-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+    .t-card {
+      background: var(--card); border: 1px solid var(--edge); border-radius: 16px;
+      padding: 22px 18px; text-align: center;
+    }
+    .t-card .t-amt { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--green); font-size: 1.05rem; }
+    .t-card blockquote { font-size: .88rem; color: var(--ink); margin: 8px 0 6px; }
+    .t-card cite { font-style: normal; font-size: .78rem; color: var(--muted); }
+
+    .disclaimer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--edge); color: #8ba094; font-size: .78rem; max-width: 62ch; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .badge, h1, .sub, .quiz { animation: rise .6s cubic-bezier(.2,.7,.3,1) both; }
+      h1 { animation-delay: .07s; } .sub { animation-delay: .14s; }
+      .quiz { animation-delay: .28s; }
+      @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="24" height="24" rx="7" fill="#16a34a"/>
+        <path d="M7 14.5l3.2 3.2L19 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>TaxRefund&nbsp;Bot</span>
+    </div>
+
+    <span class="badge">✦ Free instant check</span>
+    <h1>Find tax topics <em>worth reviewing.</em></h1>
+    <p class="sub">Answer <b>8 quick questions</b> about your life and job — and see possible areas to review on your
+      <b>2025 federal return filed in 2026</b>, with links to IRS sources. No forms, no account, no cost.</p>
+
+    <p class="proof-note">Educational information only. Results are not an eligibility decision or a refund estimate.</p>
+
+    <!-- ============ QUIZ ============ -->
+    <section class="quiz" id="quiz" aria-label="Deduction quick check">
+      <div class="quiz-head">
+        <h2>Your quick check</h2>
+        <span id="q-step">Q1 / 8</span>
+      </div>
+      <div class="progress"><i id="q-bar"></i></div>
+      <p class="q-text" id="q-text"></p>
+      <div class="q-answers" id="q-answers"></div>
+    </section>
+
+    <section class="ai-card" aria-labelledby="ai-title">
+      <h2 id="ai-title">Ask a U.S. tax question</h2>
+      <p>Get a general educational answer. Do not include names, account numbers, tax documents, or other sensitive information.</p>
+      <form id="ai-form">
+        <label for="ai-question">Your question</label>
+        <textarea id="ai-question" name="question" maxlength="2000" rows="4" required
+          placeholder="For example: What records should a freelancer keep?"></textarea>
+        <div class="ai-form-row">
+          <span class="ai-count" id="ai-count">0 / 2000</span>
+          <button class="ai-submit" id="ai-submit" type="submit">Get an educational answer</button>
+        </div>
+        <p class="ai-status" id="ai-status" aria-live="polite"></p>
+        <div class="ai-answer" id="ai-answer" hidden>
+          <h3>Educational response</h3>
+          <div class="ai-answer-text" id="ai-answer-text"></div>
+          <p class="ai-disclaimer" id="ai-disclaimer"></p>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="results" aria-label="Your results">
+      <div class="r-summary">
+        <div class="big" id="r-count">0 areas to review</div>
+        <p>may be relevant to your answers — verify every item for your situation:</p>
+      </div>
+      <div class="r-list" id="r-list"></div>
+
+      <div class="tg-cta">
+        <div class="tg-ico" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M9.04 15.31 8.9 19c.4 0 .58-.17.8-.38l1.92-1.83 3.98 2.91c.73.4 1.25.19 1.45-.67L21.9 4.6c.25-1.14-.41-1.59-1.12-1.31L2.9 9.7c-1.11.43-1.09 1.05-.19 1.33l4.35 1.35L17.2 6.1c.5-.33.95-.15.58.18Z"/></svg>
+        </div>
+        <div>
+          <h3>Continue in Telegram — it's free</h3>
+          <p>Full 8-question check, the U.S. tax guide, and AI-assisted educational answers. Beta usage limits apply.</p>
+        </div>
+        <a class="tg-btn" id="tg-link" href="https://t.me/" target="_blank" rel="noopener">Open bot</a>
+      </div>
+
+      <div class="upsell" style="margin-top:18px; border: 2px dashed var(--green-bright); border-radius: 14px; padding: 20px; background: var(--green-soft);">
+        <h3>🧾 Evidence Checklist — not available yet</h3>
+        <p>This checklist has not been built or released. <b>$5 is hypothetical test pricing only.</b>
+          This button records interest only: no order is placed, no payment is collected, and no document is generated or delivered.</p>
+        <button type="button" class="cta" id="beta-interest-button" style="padding:15px 30px; font:700 1.02rem 'Inter',sans-serif; color:#fff; background:var(--green); border:none; border-radius:12px; cursor:pointer;">I would consider this checklist</button>
+        <div class="msg" id="beta-interest-message" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============ FULL U.S. GUIDE ============ -->
+    <section class="guide" aria-label="Full U.S. tax instructions">
+      <h2>U.S. Tax Instructions <em style="color:var(--green); font-style:italic;">(2025 tax year)</em></h2>
+      <p class="g-sub">A plain-English walkthrough for U.S. filers — every item references the Internal Revenue Code (IRC) or IRS publications so you can verify it yourself.</p>
+
+      <details class="g-sec" open>
+        <summary>1. How a refund actually happens</summary>
+        <div class="g-body">
+          <p>A refund simply means you overpaid during the year — through payroll withholding (Box 2 of your W-2) or quarterly estimated tax (Form 1040-ES, IRC §6654). Filing Form 1040 is how you get the excess back.</p>
+          <p>After e-filing, refunds typically arrive within <b>21 days</b>. Track yours at <a href="https://www.irs.gov/refunds" target="_blank" rel="noopener">IRS.gov/refunds</a> ("Where's My Refund?").<span class="ref">IRC §6402</span></p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>2. Who must file — and who should anyway</summary>
+        <div class="g-body">
+          <p>Whether you must file depends on filing status, age, and gross income.<span class="ref">IRC §6012</span><span class="ref">IRS Pub 17</span> But even if you're below the threshold: <b>if any tax was withheld from your pay, filing is the only way to get it refunded.</b></p>
+          <p>Filing statuses: Single, Married Filing Jointly, Married Filing Separately, Head of Household, Qualifying Surviving Spouse. Choosing Head of Household when eligible (you paid over half the cost of keeping up a home for a qualifying person) can save thousands.</p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>3. Refundable credits — money even with zero tax</summary>
+        <div class="g-body">
+          <p><b>Earned Income Tax Credit (EITC).</b> The amount depends on earned income, filing status, qualifying-child or age/residency rules, and annual income and investment limits. A low income bracket by itself does not establish eligibility. Check the IRS EITC Assistant or Pub. 596.<span class="ref">IRC §32</span><span class="ref">IRS Pub 596</span></p>
+          <p><b>Child Tax Credit.</b> Up to <b>$2,200 per child under 17</b> (2025), of which up to $1,700 is refundable. Phase-outs start at $200k MAGI single / $400k joint. Non-child dependents (e.g., college students) can qualify for the $500 Credit for Other Dependents. File <b>Schedule 8812</b>.<span class="ref">IRC §24</span></p>
+          <p><b>American Opportunity Credit.</b> Up to <b>$2,500</b> per student for the first 4 years of college — 40% of it refundable.<span class="ref">IRC §25A</span><span class="ref">Form 8863</span></p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>4. Above-the-line deductions — no itemizing needed</summary>
+        <div class="g-body">
+          <p>Some eligible adjustments reduce income whether or not you itemize. Each has separate requirements:</p>
+          <p>• <b>Student loan interest</b> — a possible deduction only for interest actually paid on a qualified loan, subject to filing-status, dependency, and annual MAGI rules. The deduction is limited to the lesser of $2,500 or qualified interest paid; verify the tax-year rules at IRS.gov.<span class="ref">IRC §221</span></p>
+          <p>• <b>Traditional IRA contributions</b> — may be deductible depending on filing status, income, and workplace-plan coverage. Roth IRA contributions are not deductible from current income. Verify the applicable tax-year rules at IRS.gov.<span class="ref">IRC §219</span><span class="ref">IRS Pub 590-A</span></p>
+          <p>• <b>HSA contributions</b> — up to $4,300 self-only / $8,550 family (2025); triple tax-advantaged.<span class="ref">IRC §223</span></p>
+          <p>• <b>Educator expenses</b> — $300 of classroom supplies for teachers.<span class="ref">IRC §62(a)(2)(D)</span></p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>5. Standard vs. itemized deduction</summary>
+        <div class="g-body">
+          <p>2025 standard deduction: <b>$15,750</b> single / <b>$31,500</b> married joint / <b>$23,625</b> head of household. Additional standard deduction for those 65+ or blind.<span class="ref">IRC §63</span><span class="ref">Rev. Proc. 2024-40</span></p>
+          <p>Itemize (Schedule A) only if your total exceeds that: mortgage interest, state &amp; local taxes capped at $10,000, charitable gifts, and medical expenses over <b>7.5% of AGI</b>.<span class="ref">§164(b)(6)</span><span class="ref">§213</span><span class="ref">§170</span></p>
+          <p>Close to the line? "Bunching" two years of charitable giving into one year can push you over.</p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>6. Self-employed &amp; gig workers</summary>
+        <div class="g-body">
+          <p>Business expenses (mileage at $0.70/mile for 2025, supplies, software, phone share, health premiums under §162(l)) reduce Schedule C income. You also deduct <b>half your self-employment tax</b>.<span class="ref">IRC §162</span><span class="ref">§164(f)</span><span class="ref">IRS Pub 334</span></p>
+          <p>Net earnings of <b>$400 or more</b> generally require you to file a return and pay self-employment tax (Schedule SE). Separately, if you expect to owe <b>$1,000 or more</b> in tax after withholding, you must pay it through quarterly estimated taxes (Form 1040-ES) — not just when self-employed. The home office deduction ($5/sq ft simplified, up to $1,500) requires <b>regular and exclusive</b> business use.<span class="ref">IRC §6017</span><span class="ref">§6654</span><span class="ref">IRC §280A</span><span class="ref">IRS Pub 587</span></p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>7. Deadlines, extensions, and the 3-year refund window</summary>
+        <div class="g-body">
+          <p>Federal returns are due <b>April 15</b>. Form 4868 extends filing to October 15 — <b>but not the time to pay</b>; unpaid balances accrue interest and penalties.<span class="ref">IRC §6081</span><span class="ref">§6651</span></p>
+          <p><b>Critical:</b> to claim a refund you generally must file within <b>3 years of the later of the original due date or the date you actually filed</b> — and no later than <b>2 years from the date you paid the tax</b>, whichever is later. (These periods can differ for amended returns, foreign filers, and certain disasters.) The IRS may hold a refund if you didn't file a required prior-year return.<span class="ref">IRC §6511(a)</span></p>
+          <p>Made a mistake on a filed return? Amend with <b>Form 1040-X</b> — generally within 3 years of filing the original.</p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>8. Free filing &amp; free in-person help</summary>
+        <div class="g-body">
+          <p><b>IRS Free File</b> — free guided software for eligible taxpayers: <a href="https://www.irs.gov/freefile" target="_blank" rel="noopener">irs.gov/freefile</a>.</p>
+          <p><b>VITA / Tax Counseling for the Elderly</b> — free in-person preparation (generally ≤$67k income, disabilities, or 60+): <a href="https://www.irs.gov/vita" target="_blank" rel="noopener">irs.gov/vita</a> or <b>1-800-906-9887</b>.</p>
+          <p><b>Identity protection</b> — get an IP PIN each year so nobody files a fraudulent return in your name: <a href="https://www.irs.gov/ippin" target="_blank" rel="noopener">irs.gov/ippin</a>.</p>
+          <p>If you can't pay what you owe, the IRS offers installment agreements and Offers in Compromise — never ignore notices.<span class="ref">IRC §6159</span></p>
+        </div>
+      </details>
+
+      <details class="g-sec">
+        <summary>9. Warning: penalties for false claims</summary>
+        <div class="g-body">
+          <p>Claiming deductions or credits you don't qualify for carries a 20% accuracy penalty, 75% for fraud, plus potential criminal liability — up to 5 years for tax evasion.<span class="ref">IRC §6662</span><span class="ref">§6663</span><span class="ref">§7201</span></p>
+          <p>When in doubt, keep records and ask an IRS-authorized professional (CPA, Enrolled Agent, or tax attorney — check credentials at <a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">irs.treasury.gov/rpo</a>).</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ EXAMPLE SCENARIOS ============ -->
+    <p class="t-label">Illustrative examples only — not customer stories or results</p>
+    <div class="t-grid">
+      <div class="t-card">
+        <div class="t-amt">Student loan interest</div>
+        <blockquote>May be relevant when qualified interest was paid and income limits are met.</blockquote>
+        <cite>Illustrative example</cite>
+      </div>
+      <div class="t-card">
+        <div class="t-amt">Home office</div>
+        <blockquote>Requires qualifying business use, records, and the correct method.</blockquote>
+        <cite>Illustrative example</cite>
+      </div>
+      <div class="t-card">
+        <div class="t-amt">Saver's credit</div>
+        <blockquote>Eligibility depends on filing status, income, contribution, and other rules.</blockquote>
+        <cite>Illustrative example</cite>
+      </div>
+    </div>
+
+    <p class="disclaimer">Disclaimer: TaxRefund Bot provides general information for educational purposes only
+      and is not legal, accounting, or tax advice. This page is for the 2025 federal tax year (returns filed in
+      2026); tax rules and amounts change, so verify each item at IRS.gov. We do not prepare, sign, or file returns,
+      and we never guarantee a refund or savings. Do not submit SSNs, bank details, full tax returns, or identity
+      documents here. Consult a qualified tax professional (CPA, EA, or attorney) for your situation.</p>
+    <p class="legal-links" style="margin-top:14px; font-size:.78rem; color:var(--muted);">
+      <a href="/terms.html" style="color:var(--muted); text-decoration:underline;">Terms of Service</a> ·
+      <a href="/privacy.html" style="color:var(--muted); text-decoration:underline;">Privacy Policy</a>
+    </p>
+  </main>
+
+  <main style="max-width:760px; margin:0 auto; padding:28px 20px 10px;">
+    <h2 style="font-size:1.25rem; margin-bottom:14px;">Frequently asked questions</h2>
+    <div itemscope itemtype="https://schema.org/FAQPage">
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What tax deductions could I be missing?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">Possible review areas include student-loan interest, state sales tax when applicable, educator expenses, HSA contributions, and the deductible portion of self-employment tax. Employee job-search costs are generally not a federal deduction under current law. Take the 8-question check above to see which items may need review.</p></div>
+      </details>
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What are the most common missed tax deductions?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">Potential itemized deductions can include qualifying charitable gifts, medical expenses above the applicable AGI threshold, mortgage interest, and certain energy-related items. Each has separate requirements; compare the eligible total with the standard deduction and verify current IRS rules.</p></div>
+      </details>
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What records should I keep?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">Keep receipts, statements, mileage logs, and other records that support each claim. Forms such as 1098-E and 5498-SA help document certain items, but a form does not automatically prove eligibility. The IRS can ask for substantiation.</p></div>
+      </details>
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What if I forgot to include a tax deduction?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">You may be able to file Form 1040-X, but the deadline depends on the refund-claim rules and the date tax was paid. Check the current IRS instructions and IRC §6511 before relying on a three-year period.</p></div>
+      </details>
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What can I write off on my taxes self-employed?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">Self-employed filers may deduct ordinary and necessary business expenses, subject to records, limits, and the correct form. Home office, equipment, software, health insurance, and retirement items each have separate rules. Answer the quiz questions to get a review list.</p></div>
+      </details>
+      <details style="margin-bottom:10px;" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary itemprop="name" style="cursor:pointer; font-weight:600;">What are the biggest tax deductions for 2025?</summary>
+        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer"><p itemprop="text">The answer depends on filing status and the law in effect for tax year 2025. Compare the official standard deduction with potentially itemized mortgage interest, state and local taxes, charitable gifts, and medical expenses. Verify current amounts at IRS.gov before relying on them.</p></div>
+      </details>
+    </div>
+  </main>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"What tax deductions could I be missing?","acceptedAnswer":{"@type":"Answer","text":"Possible review areas include student-loan interest, applicable state sales tax, educator expenses, HSA contributions, and the deductible portion of self-employment tax. Employee job-search costs are generally not a federal deduction under current law."}},
+    {"@type":"Question","name":"What are the most common missed tax deductions?","acceptedAnswer":{"@type":"Answer","text":"Charitable donations, medical expenses above 7.5% of AGI, mortgage points, energy-efficient home improvements."}},
+    {"@type":"Question","name":"What records should I keep?","acceptedAnswer":{"@type":"Answer","text":"Keep receipts, statements, mileage logs, and other records that support each claim. Forms such as 1098-E and 5498-SA help document certain items but do not automatically prove eligibility."}},
+    {"@type":"Question","name":"What if I forgot to include a tax deduction?","acceptedAnswer":{"@type":"Answer","text":"You may be able to file Form 1040-X, but the deadline depends on the refund-claim rules and the date tax was paid. Check current IRS instructions and IRC section 6511."}},
+    {"@type":"Question","name":"What can I write off on my taxes self-employed?","acceptedAnswer":{"@type":"Answer","text":"Home office, equipment, software, SE-tax employer half, health premiums, SEP-IRA/Solo 401k contributions."}},
+    {"@type":"Question","name":"What are the biggest tax deductions for 2025?","acceptedAnswer":{"@type":"Answer","text":"The answer depends on filing status and the law in effect for tax year 2025. Compare the official standard deduction with potentially itemized mortgage interest, state and local taxes, charitable gifts, and medical expenses."}}
+  ]}
+  </script>
+
+  <script>
+    /* ---------- free mini-quiz: instant value on the page ----------
+       One answer per question; each option sets flags that drive the findings
+       (filing status & income matter for amounts and phase-outs under the IRC). */
+    var QUESTIONS = [
+      { key: 'status', q: 'First — how do you file your taxes?', opts: [
+        { label: 'Single' },
+        { label: 'Married, filing jointly' },
+        { label: 'Head of household' },
+        { label: 'Not sure yet', flags: { status: 'other' } }
+      ], flags: ['status:single', 'status:mfj', 'status:hoh'] },
+      { key: 'work', q: 'How do you earn your income?', opts: [
+        { label: 'Employee (W-2)', hint: 'Salary or wages, taxes withheld' },
+        { label: 'Self-employed / freelance / gig', hint: '1099s, contracts, Uber/Upwork…' },
+        { label: 'Both', hint: 'A job plus a side business' },
+        { label: 'Not working right now' }
+      ], flags: ['w2', 'gig', 'w2 gig', ''] },
+      { key: 'income', q: 'Roughly what is your yearly household income?', opts: [
+        { label: 'Under $40,000' },
+        { label: '$40,000 – $80,000' },
+        { label: '$80,000 – $200,000' },
+        { label: 'Over $200,000' }
+      ], flags: ['inc:low', 'inc:mid', 'inc:high', 'inc:vhigh'] },
+      { key: 'kids', q: 'Do you claim dependents?', opts: [
+        { label: 'Children under 17' },
+        { label: 'Other dependents', hint: 'College students, elderly parents' },
+        { label: 'Both' },
+        { label: 'No dependents' }
+      ], flags: ['kids', 'dep', 'kids dep', ''] },
+      { key: 'edu', q: 'Anything education-related?', opts: [
+        { label: 'Paying off student loans' },
+        { label: 'In college right now', hint: 'Or paying tuition' },
+        { label: 'Both' },
+        { label: 'Neither' }
+      ], flags: ['study', 'student', 'study student', ''] },
+      { key: 'home', q: 'Where do you usually work?', opts: [
+        { label: 'From home — self-employed' },
+        { label: 'From home — company employee', hint: 'Remote or hybrid W-2' },
+        { label: 'At an office / on site' },
+        { label: 'Mixed' }
+      ], flags: ['home', 'homeW2', '', ''] },
+      { key: 'retire', q: 'Are you saving for retirement?', opts: [
+        { label: 'Yes — 401(k) or workplace plan' },
+        { label: 'Yes — IRA', hint: 'Traditional or Roth' },
+        { label: 'Both' },
+        { label: 'Not yet' }
+      ], flags: ['ret', 'ira', 'ret ira', ''] },
+      { key: 'give', q: 'Charity or big medical bills this year?', opts: [
+        { label: 'I donate to charity', hint: 'Money or goods' },
+        { label: 'Big medical expenses', hint: 'Bills, premiums, out-of-pocket' },
+        { label: 'Both' },
+        { label: 'Neither' }
+      ], flags: ['give', 'medical', 'give medical', ''] }
+    ];
+
+    var STD_DEDUCTION = { single: '$15,750', mfj: '$31,500', hoh: '$23,625', other: '$15,750+ (depends on status)' };
+
+    /* flags -> tailored findings; each cites the IRC / IRS publication it rests on */
+    function evaluate(a) {
+      var out = [];
+      out.push({
+        icon: '🧾', bg: '#e8f2fb',
+        name: 'Standard deduction (' + (STD_DEDUCTION[a.status || 'other'] || '') + ')',
+        desc: a.status === 'mfj' ? 'Married filing jointly gets $31,500 for 2025 — but itemize (Schedule A) if mortgage interest + state taxes (up to $10k) + charity + large medical beat it.'
+          : 'Your 2025 amount is ' + STD_DEDUCTION[a.status || 'other'] + '. Compare it against itemizing (Schedule A): mortgage interest, state taxes up to $10,000, charity, medical over 7.5% of income.',
+        tag: 'IRC §63 · FORM 1040'
+      });
+      if (a.gig) {
+        out.push({
+          icon: '💼', bg: '#fff8e6',
+          name: 'Self-employment deductions',
+          desc: 'Mileage ($0.70/mile 2025), supplies, software, phone share, health premiums, plus half your self-employment tax — all reduce your Schedule C income.',
+          tag: 'IRC §162, §164(f) · SCHEDULE C'
+        });
+      }
+      if (a.gig && a.home) {
+        out.push({
+          icon: '🏠', bg: '#e6f7ed',
+          name: 'Possible home-office review area',
+          desc: 'Self-employment and working from home do not establish eligibility by themselves. The space generally must meet business-use rules; verify the regular-and-exclusive-use tests, records, and available methods in IRS Pub. 587.',
+          tag: 'IRC §280A · FORM 8829'
+        });
+      } else if (a.homeW2 && !a.gig) {
+        out.push({
+          icon: 'ℹ️', bg: '#f1f5f9',
+          name: 'Home office: honest check',
+          desc: 'Working from home as a W-2 employee does NOT qualify — employee home-office deduction is suspended through 2025. Save this answer for when rules change; your win is elsewhere on this list.',
+          tag: 'IRC §280A · TCJA §11045'
+        });
+      }
+      if (a.kids) {
+        out.push({
+          icon: '👶', bg: '#fdf3fb',
+          name: 'Child tax credit',
+          desc: 'Up to $2,200 per child under 17 (2025), up to $1,700 refundable' + (a.inc === 'vhigh' ? '. Note: it phases out above $200k income single / $400k joint.' : '.') + ' File Schedule 8812.',
+          tag: 'IRC §24 · SCHEDULE 8812'
+        });
+      }
+      if (a.dep) {
+        out.push({
+          icon: '👨‍🎓', bg: '#fdf3fb',
+          name: 'Credit for other dependents',
+          desc: 'Children 17+ and college students, or relatives you support: $500 each, non-refundable. Often missed entirely.',
+          tag: 'IRC §24(h) · SCHEDULE 8812'
+        });
+      }
+      if (a.inc === 'low') {
+        out.push({
+          icon: '💵', bg: '#e6f7ed',
+          name: 'Possible EITC review area',
+          desc: 'This broad income range alone cannot establish eligibility. The EITC depends on earned income, filing status, qualifying-child or age/residency rules, and annual income and investment limits. Check the IRS EITC Assistant or Pub. 596.',
+          tag: 'IRC §32 · IRS PUB 596'
+        });
+      }
+      if (a.study) {
+        out.push({
+          icon: '🎓', bg: '#fdf0e3',
+          name: 'Possible student-loan interest review area',
+          desc: 'Only if you actually paid interest on a qualified student loan and meet the filing-status, dependency, and annual MAGI rules. The deduction is limited to the lesser of $2,500 or qualified interest paid; itemizing is not required. See IRS Topic 456.',
+          tag: 'IRC §221 · SCHEDULE 1'
+        });
+      }
+      if (a.student) {
+        out.push({
+          icon: '📚', bg: '#fdf0e3',
+          name: 'Education credits (AOTC / LLC)',
+          desc: 'American Opportunity Credit: up to $2,500/student, 40% refundable (first 4 years of college). Lifetime Learning Credit: up to $2,000, any level of study.',
+          tag: 'IRC §25A · FORM 8863'
+        });
+      }
+      if (a.ret || a.ira) {
+        out.push({
+          icon: '📈', bg: '#fff8e6',
+          name: 'Saver\u2019s credit + retirement deduction',
+          desc: (a.inc === 'high' || a.inc === 'vhigh')
+            ? 'Eligibility depends on filing status, income, age, and other rules. Eligible pre-tax workplace contributions or deductible Traditional IRA contributions may reduce current taxable income; Roth IRA contributions do not. Check the applicable 2025 rules and Form 8880.'
+            : 'A possible review area, not an eligibility result. The Saver\u2019s Credit depends on filing status, income, age, and other rules. Eligible pre-tax workplace contributions or deductible Traditional IRA contributions may reduce current taxable income; Roth IRA contributions do not.',
+          tag: 'IRC §25B, §219 · FORM 8880'
+        });
+      }
+      if (a.give) {
+        out.push({
+          icon: '❤️', bg: '#fdecef',
+          name: 'Charitable contributions',
+          desc: 'Cash to qualified orgs up to 60% of AGI, goods at fair market value — deductible when you itemize (Schedule A). Near the standard deduction? Bunch two years of giving into one.',
+          tag: 'IRC §170 · SCHEDULE A'
+        });
+      }
+      if (a.medical) {
+        out.push({
+          icon: '🩺', bg: '#e8f2fb',
+          name: 'Medical expense deduction',
+          desc: 'When itemizing, out-of-pocket costs above 7.5% of income count: premiums, dental, glasses, mileage to care (21¢/mile 2025).' + (a.inc === 'vhigh' ? ' At high income the 7.5% floor is hard to clear — HSA is usually the better play.' : '') ,
+          tag: 'IRC §213 · SCHEDULE A'
+        });
+      }
+      return out;
+    }
+    var answers = {}, idx = 0;
+
+    function applyFlags(flagStr) {
+      flagStr.split(' ').forEach(function (f) {
+        if (!f) return;
+        var kv = f.split(':');
+        if (kv.length === 2) answers[kv[0]] = kv[1]; else answers[f] = true;
+      });
+    }
+    function renderQ() {
+      var step = document.getElementById('q-step'), bar = document.getElementById('q-bar'), text = document.getElementById('q-text');
+      var q = QUESTIONS[idx];
+      step.textContent = 'Q' + (idx + 1) + ' / ' + QUESTIONS.length;
+      bar.style.width = (idx / QUESTIONS.length * 100) + '%';
+      text.innerHTML = q.q;
+      var box = document.getElementById('q-answers');
+      box.innerHTML = '';
+      q.opts.forEach(function (opt, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = opt.label + (opt.hint ? '<small>' + opt.hint + '</small>' : '');
+        b.addEventListener('click', function () {
+          if (idx === 0) trackInterest('quiz_start');
+          applyFlags(q.flags[i] || '');
+          idx++;
+          if (idx < QUESTIONS.length) { renderQ(); }
+          else { document.getElementById('q-bar').style.width = '100%'; finish(); }
+        });
+        box.appendChild(b);
+      });
+    }
+    function finish() {
+      var hits = evaluate(answers);
+      var quizEl = document.getElementById('quiz'), resEl = document.getElementById('results');
+      quizEl.style.display = 'none';
+      resEl.style.display = 'block';
+      document.getElementById('r-count').textContent =
+        hits.length + (hits.length === 1 ? ' area' : ' areas') + ' to review';
+      var list = document.getElementById('r-list');
+      list.innerHTML = '';
+      hits.forEach(function (f) {
+        var el = document.createElement('div');
+        el.className = 'r-item';
+        el.innerHTML = '<div class="dot" style="background:' + f.bg + '">' + f.icon + '</div>' +
+          '<div><h3>' + f.name + '</h3><p>' + f.desc + '</p><span class="law-tag">' + f.tag + '</span></div>';
+        list.appendChild(el);
+      });
+      trackInterest('quiz_complete');
+      resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    renderQ();
+
+    var aiForm = document.getElementById('ai-form');
+    var aiQuestion = document.getElementById('ai-question');
+    var aiSubmit = document.getElementById('ai-submit');
+    var aiStatus = document.getElementById('ai-status');
+    var aiAnswer = document.getElementById('ai-answer');
+    var aiAnswerText = document.getElementById('ai-answer-text');
+    var aiDisclaimer = document.getElementById('ai-disclaimer');
+    var aiCount = document.getElementById('ai-count');
+
+    function appendAiInline(parent, text) {
+      var tokenPattern = /(\*\*[^*\n]+\*\*|`[^`\n]+`)/g;
+      var cursor = 0;
+      var match;
+      while ((match = tokenPattern.exec(text))) {
+        parent.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+        var token = match[0];
+        var element = document.createElement(token.slice(0, 2) === '**' ? 'strong' : 'code');
+        element.textContent = token.slice(token.slice(0, 2) === '**' ? 2 : 1,
+          token.slice(0, 2) === '**' ? -2 : -1);
+        parent.appendChild(element);
+        cursor = match.index + token.length;
+      }
+      parent.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+
+    function aiTableCells(line) {
+      var value = line.trim();
+      if (value.charAt(0) === '|') value = value.slice(1);
+      if (value.charAt(value.length - 1) === '|') value = value.slice(0, -1);
+      return value.split('|').map(function (cell) { return cell.trim(); });
+    }
+
+    function isAiTableDivider(line) {
+      var cells = aiTableCells(line);
+      return cells.length > 1 && cells.every(function (cell) {
+        return /^:?-{3,}:?$/.test(cell);
+      });
+    }
+
+    function isAiTableStart(lines, index) {
+      return index + 1 < lines.length && lines[index].indexOf('|') !== -1 &&
+        isAiTableDivider(lines[index + 1]);
+    }
+
+    function renderAiAnswer(markdown, container) {
+      var lines = markdown.split(/\r?\n/);
+      var fragment = document.createDocumentFragment();
+      var index = 0;
+
+      while (index < lines.length) {
+        var line = lines[index];
+        var heading = /^(#{1,3})\s+(.+)$/.exec(line);
+        if (!line.trim()) {
+          index += 1;
+          continue;
+        }
+        if (heading) {
+          var headingElement = document.createElement(heading[1].length === 1 ? 'h2' : 'h3');
+          appendAiInline(headingElement, heading[2]);
+          fragment.appendChild(headingElement);
+          index += 1;
+          continue;
+        }
+        if (isAiTableStart(lines, index)) {
+          var table = document.createElement('table');
+          var tableHead = document.createElement('thead');
+          var headerRow = document.createElement('tr');
+          aiTableCells(line).forEach(function (cell) {
+            var header = document.createElement('th');
+            header.scope = 'col';
+            appendAiInline(header, cell);
+            headerRow.appendChild(header);
+          });
+          tableHead.appendChild(headerRow);
+          table.appendChild(tableHead);
+          var tableBody = document.createElement('tbody');
+          index += 2;
+          while (index < lines.length && lines[index].indexOf('|') !== -1 && lines[index].trim()) {
+            var row = document.createElement('tr');
+            aiTableCells(lines[index]).forEach(function (cell) {
+              var tableCell = document.createElement('td');
+              appendAiInline(tableCell, cell);
+              row.appendChild(tableCell);
+            });
+            tableBody.appendChild(row);
+            index += 1;
+          }
+          table.appendChild(tableBody);
+          fragment.appendChild(table);
+          continue;
+        }
+
+        var listMatch = /^\s*[-*]\s+(.+)$/.exec(line);
+        if (listMatch) {
+          var list = document.createElement('ul');
+          while (index < lines.length) {
+            listMatch = /^\s*[-*]\s+(.+)$/.exec(lines[index]);
+            if (!listMatch) break;
+            var item = document.createElement('li');
+            appendAiInline(item, listMatch[1]);
+            list.appendChild(item);
+            index += 1;
+          }
+          fragment.appendChild(list);
+          continue;
+        }
+
+        var paragraphLines = [line.trim()];
+        index += 1;
+        while (index < lines.length && lines[index].trim() &&
+          !/^(#{1,3})\s+/.test(lines[index]) &&
+          !/^\s*[-*]\s+/.test(lines[index]) &&
+          !isAiTableStart(lines, index)) {
+          paragraphLines.push(lines[index].trim());
+          index += 1;
+        }
+        var paragraph = document.createElement('p');
+        appendAiInline(paragraph, paragraphLines.join(' '));
+        fragment.appendChild(paragraph);
+      }
+
+      container.replaceChildren(fragment);
+    }
+
+    aiQuestion.addEventListener('input', function () {
+      aiCount.textContent = aiQuestion.value.length + ' / 2000';
+    });
+    aiForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var question = aiQuestion.value.trim();
+      if (!question) {
+        aiStatus.textContent = 'Enter a question first.';
+        return;
+      }
+      if (question.length > 2000) {
+        aiStatus.textContent = 'Please shorten the question to 2000 characters or fewer.';
+        return;
+      }
+
+      aiSubmit.disabled = true;
+      aiStatus.textContent = 'Preparing your answer…';
+      aiAnswer.hidden = true;
+      try {
+        if (!await visitorReady) {
+          aiStatus.textContent = 'AI answers are temporarily unavailable. Please try again later.';
+          return;
+        }
+        var response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: question })
+        });
+        var result = await response.json();
+        if (!response.ok || !result.ok || typeof result.answer !== 'string' ||
+            typeof result.disclaimer !== 'string') {
+          var errors = {
+            question_too_long: 'Please shorten the question to 2000 characters or fewer.',
+            question_required: 'Enter a question first.',
+            limit_reached: 'The beta AI request limit has been reached. Please try again later.',
+            not_configured: 'AI answers are not configured on this local worker yet. Your question was not saved by this app.',
+            unavailable: 'AI answers are temporarily unavailable. Your question was not saved by this app.'
+          };
+          aiStatus.textContent = errors[result.error] || 'The question could not be answered. Please try again later.';
+          return;
+        }
+        renderAiAnswer(result.answer, aiAnswerText);
+        aiDisclaimer.textContent = result.disclaimer;
+        aiAnswer.hidden = false;
+        aiStatus.textContent = 'Answer ready.';
+      } catch {
+        aiStatus.textContent = 'AI answers are temporarily unavailable. Your question was not saved by this app.';
+        console.warn('An AI answer request could not be completed.');
+      } finally {
+        aiQuestion.value = '';
+        aiCount.textContent = '0 / 2000';
+        aiSubmit.disabled = false;
+      }
+    });
+
+    async function recordInterest(eventType) {
+      var response = await fetch('/api/interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: eventType })
+      });
+      if (!response.ok) throw new Error('Interest event was not accepted');
+    }
+    function trackInterest(eventType) {
+      recordInterest(eventType).catch(function () {
+        console.warn('A beta analytics event could not be recorded.');
+      });
+    }
+    document.getElementById('beta-interest-button').addEventListener('click', async function () {
+      var button = this;
+      var message = document.getElementById('beta-interest-message');
+      button.disabled = true;
+      try {
+        await recordInterest('artifact_intent');
+        message.textContent = 'Interest recorded only. No order, payment, or checklist delivery has been created.';
+      } catch {
+        message.textContent = 'Interest could not be recorded. Please try again later.';
+        button.disabled = false;
+        console.warn('A beta interest event could not be recorded.');
+      }
+    });
+    document.getElementById('tg-link').addEventListener('click', function () {
+      trackInterest('telegram_open');
+    });
+    var visitorReady = fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    }).then(function (response) {
+      return response.ok;
+    }).catch(function () {
+      console.warn('The anonymous visitor count could not be updated.');
+      return false;
+    });
+    // Wire the Telegram button to the deployed bot's real @username.
+    loadBotLink();
+    async function loadBotLink() {
+      try {
+        var r = await fetch('/api/bot-info');
+        var j = await r.json();
+        if (j.ok && j.username) {
+          document.getElementById('tg-link').href = 'https://t.me/' + j.username;
+        } else {
+          document.getElementById('tg-link').style.display = 'none';
+        }
+      } catch {
+        document.getElementById('tg-link').style.display = 'none';
+        console.warn('The Telegram bot link could not be loaded.');
+      }
+    }
+  </script>
+</body>
+</html>

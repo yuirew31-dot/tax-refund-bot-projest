@@ -1,0 +1,6 @@
+.wrangler-check/
+node_modules/
+.env
+.env.*
+.dev.vars*
+.wrangler/

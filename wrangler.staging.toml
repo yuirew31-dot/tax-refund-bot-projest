@@ -1,0 +1,23 @@
+name = "taxrefund-bot-staging"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+workers_dev = true
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "taxrefund-bot-staging-db"
+database_id = "390cc4da-9fd0-452d-9c78-a8f870526ef8"
+migrations_dir = "./migrations"
+
+[vars]
+GROQ_MAX_INPUT_CHARS = "2000"
+GROQ_MAX_OUTPUT_TOKENS = "600"
+GROQ_MAX_OUTPUT_CHARS = "2600"
+GROQ_TIMEOUT_MS = "15000"
+GROQ_CHAT_DAILY_LIMIT = "3"
+GROQ_CHAT_10MIN_LIMIT = "3"
+GROQ_GLOBAL_DAILY_LIMIT = "5"
+GROQ_GLOBAL_10MIN_LIMIT = "3"
